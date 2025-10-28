@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MatchingEngine", "MatchingEngine\MatchingEngine.csproj", "{8DE56E21-7A56-484D-B38C-8FA5D68F5F87}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MatchingEngine.Example", "MatchingEngine.Example\MatchingEngine.Example.csproj", "{59A5B3BB-01AB-4429-A244-0C8E11D441A1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MatchingEngine.Tests", "MatchingEngine.Tests\MatchingEngine.Tests.csproj", "{ABF95E41-7E93-48CE-866B-64C3175DBE3E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8DE56E21-7A56-484D-B38C-8FA5D68F5F87}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8DE56E21-7A56-484D-B38C-8FA5D68F5F87}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8DE56E21-7A56-484D-B38C-8FA5D68F5F87}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8DE56E21-7A56-484D-B38C-8FA5D68F5F87}.Release|Any CPU.Build.0 = Release|Any CPU
+		{59A5B3BB-01AB-4429-A244-0C8E11D441A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{59A5B3BB-01AB-4429-A244-0C8E11D441A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{59A5B3BB-01AB-4429-A244-0C8E11D441A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{59A5B3BB-01AB-4429-A244-0C8E11D441A1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ABF95E41-7E93-48CE-866B-64C3175DBE3E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ABF95E41-7E93-48CE-866B-64C3175DBE3E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ABF95E41-7E93-48CE-866B-64C3175DBE3E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ABF95E41-7E93-48CE-866B-64C3175DBE3E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
