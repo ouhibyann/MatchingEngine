@@ -1,52 +1,55 @@
 ﻿using System.Diagnostics;
 using System.Threading.Channels;
 using MatchingEngine.Example;
+using MatchingEngine.Example.Workers;
 using MatchingEngine.Transport;
 using Microsoft.Extensions.Configuration;
 
+// StopWatch for "benchmarking"
+Stopwatch sw = Stopwatch.StartNew();
+sw.Start();
+
 // Load Config
-var configuration = new ConfigurationBuilder().SetBasePath(AppContext.BaseDirectory).AddJsonFile("appsettings.json")
+IConfigurationRoot configuration = new ConfigurationBuilder().SetBasePath(AppContext.BaseDirectory)
+    .AddJsonFile("appsettings.json")
     .Build();
-var cfg = new Config()
+Config cfg = new Config()
 {
     Producers = configuration.GetValue<int>("Config:Producers"),
     Consumers = configuration.GetValue<int>("Config:Consumers"),
     MessagesPerProducer = configuration.GetValue<int>("Config:MessagesPerProducer")
 };
 
-// Create Hub, producer, consumer
-var cts = new CancellationTokenSource();
-var hub = new Hub<Instrument>(capacity: 128, fullMode: BoundedChannelFullMode.Wait, singleWriter: false,
+// Create Hub and Cancellation Token
+CancellationTokenSource cts = new CancellationTokenSource();
+Hub<Instrument> hub = new Hub<Instrument>(capacity: 128, fullMode: BoundedChannelFullMode.Wait, singleWriter: false,
     singleReader: false);
-var producer = new Producer<Instrument>(hub);
-var consumer = new Consumer<Instrument>(hub);
 
-// StopWatch for "benchmarking"
-Stopwatch sw = Stopwatch.StartNew();
-sw.Start();
-
-
-
-var consumerTask = Task.Run(() => consumer.RunAsync(cts.Token));
-
-
-for (int i = 1; i < 1_000_000; i++)
+// Create Consumer Tasks
+// Creating them before the Producer Tasks gives a chance to every consumer to be awakened equally
+Task[] consumerTasks = new Task[cfg.Consumers];
+for (int i = 0; i < cfg.Consumers; i++)
 {
-    var order = Instrument.New(price: 10 + i, qty: (1 + i) % i);
-    await producer.PublishAsync(order, cts.Token);
+    int buyerId = i;
+    var worker = new Consumers(buyerId, hub);
+    consumerTasks[i] = worker.RunAsync(cts.Token);
 }
 
-hub.Writer.TryComplete();
-cts.Cancel();
+// Create Producer Tasks
+Producer<Instrument> producer = new Producer<Instrument>(hub);
+Task[] producerTasks = new Task[cfg.Producers];
+for (int i = 0; i < cfg.Producers; i++)
+{
+    int sellerId = i;
+    Producers producers = new Producers(sellerId, cfg.MessagesPerProducer, producer, hub);
+    producerTasks[i] = producers.RunAsync(cts.Token);
+}
+
+
+await Task.WhenAll(producerTasks);
+hub.Writer.Complete();
+await Task.WhenAll(consumerTasks);
 sw.Stop();
 
-try
-{
-    await consumerTask;
-}
-catch (OperationCanceledException)
-{
-    Console.WriteLine($"Example Canceled. Elapsed: {sw.Elapsed}");
-}
 
 Console.WriteLine($"Example finished. Elapsed: {sw.Elapsed}");

@@ -1,6 +1,6 @@
 namespace MatchingEngine.Example;
 
-sealed record Instrument(
+public sealed record Instrument(
     Guid Id,
     decimal Price,
     int Quantity,
