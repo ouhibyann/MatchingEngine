@@ -27,7 +27,8 @@ public sealed class Producers
             int qty = rnd.Next(1, 10);
             Instrument order = Instrument.New(price, qty);
 
-            await _log.WriteLineAsync($"Producer_{_producerId} | {order.Price} | {order.Quantity} | {order.Id}", ct);
+            await _log.WriteLineAsync($"Producer_{_producerId} | {order.Price} | {order.Quantity} | {order.Id} | {
+                order.CreatedOn}");
             await _producer.PublishAsync(order, ct).ConfigureAwait(false);
         }
     }

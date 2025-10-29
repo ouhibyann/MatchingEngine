@@ -22,7 +22,7 @@ Config cfg = new Config()
 
 // Create Hub and Cancellation Token
 CancellationTokenSource cts = new CancellationTokenSource();
-Hub<Instrument> hub = new Hub<Instrument>(capacity: 128, fullMode: BoundedChannelFullMode.Wait, singleWriter: false,
+Hub<Instrument> hub = new Hub<Instrument>(capacity: 10000, fullMode: BoundedChannelFullMode.Wait, singleWriter: false,
     singleReader: false);
 
 // Create AsyncLogger
