@@ -8,10 +8,10 @@ public sealed class Producer<T> where T : class, IInstrument
 {
     private readonly ChannelWriter<T> _writer;
     private static long _Seq = 0;
-    private readonly AsyncLogger _log;
+    private readonly IAsyncLogger _log;
 
 
-    public Producer(IMessageBus<T> bus, AsyncLogger log)
+    public Producer(IMessageBus<T> bus, IAsyncLogger log)
     {
         _writer = bus.Writer;
         _log = log;

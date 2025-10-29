@@ -5,9 +5,9 @@ namespace MatchingEngine.Transport;
 public sealed class Consumer<T> where T : class, IInstrument
 {
     private readonly ChannelReader<T> _reader;
-    private readonly AsyncLogger _log;
+    private readonly IAsyncLogger _log;
 
-    public Consumer(IMessageBus<T> bus, AsyncLogger log)
+    public Consumer(IMessageBus<T> bus, IAsyncLogger log)
     {
         _reader = bus.Reader;
         _log = log;
