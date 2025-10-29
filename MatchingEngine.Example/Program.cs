@@ -17,6 +17,7 @@ IConfigurationRoot configuration = new ConfigurationBuilder().SetBasePath(AppCon
     .Build();
 Config cfg = new Config()
 {
+    LoggingEnabled = configuration.GetValue<bool>("Logging:Enabled"),
     Producers = configuration.GetValue<int>("Config:Producers"),
     Consumers = configuration.GetValue<int>("Config:Consumers"),
     MessagesPerProducer = configuration.GetValue<int>("Config:MessagesPerProducer")
@@ -28,7 +29,7 @@ Hub<Instrument> hub = new Hub<Instrument>(capacity: 10000, fullMode: BoundedChan
     singleReader: false);
 
 // Create AsyncLogger
-AsyncLogger logger = new AsyncLogger(cts.Token);
+AsyncLogger logger = new AsyncLogger(cts.Token) { Enabled = cfg.LoggingEnabled };
 await logger.StartAsync();
 
 // Create Consumer Tasks

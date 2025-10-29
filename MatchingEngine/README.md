@@ -18,6 +18,7 @@ Apply high-performance techniques (e.g., object pooling, lock-free structures).
 ## MatchingEngine
 
 The solution has been scoped with the following assumptions / choices in mind:
+
 - The matching is made on a vendor / buyer principle -> There is no order-book / Trades / events.
   This choice has been made due to time constraint, prototyping, and personal assumptions.
 - Instruments are generic enough to handle different kinds of tickers.
@@ -30,6 +31,7 @@ Bounded `Channel<T>` in `Hub.cs` with configurable FullMode and capacity enables
 `Interlocked.Increment` on `InsertedOnTicks` ensures order within the same timestamp bucket.
 
 ## MatchingEngine—Example
+
 ## Build & Run
 
 ```shell
@@ -39,3 +41,5 @@ dotnet run --project MatchingEngine.Example -c Release
 ```
 
 Edit `appsettings.json` to adjust Producers, Consumers, and MessagesPerProducer.<br>
+You can also toggle the logging in `appsettings.json` - disable to see real performances as logging put a lot of
+pressure on the GC

@@ -7,12 +7,13 @@ public sealed class AsyncLogger : IAsyncLogger
     private readonly Channel<string> _channel = Channel.CreateUnbounded<string>();
     private readonly CancellationToken _outer;
     private Task? _task;
+    public bool Enabled { get; set; } = true;
 
     public AsyncLogger(CancellationToken outer) { _outer = outer; }
 
     public ValueTask WriteLineAsync(string line, CancellationToken ct = default)
     {
-        return _channel.Writer.WriteAsync(line, ct);
+        return Enabled ? _channel.Writer.WriteAsync(line, ct) : ValueTask.CompletedTask;
     }
 
     // Create a scoped logger that prefixes category
@@ -38,6 +39,7 @@ public sealed class AsyncLogger : IAsyncLogger
 
     public Task StartAsync()
     {
+        if (!Enabled) return Task.CompletedTask;
         _task = Task.Run(async () =>
         {
             try
@@ -55,6 +57,7 @@ public sealed class AsyncLogger : IAsyncLogger
 
     public async Task StopAsync()
     {
+        if (!Enabled) return;
         _channel.Writer.TryComplete();
         if (_task is not null) await _task;
     }
