@@ -6,4 +6,5 @@ public interface IInstrument
     public decimal Price { get; }
     public int Quantity { get; }
     public DateTime CreatedOn { get; }
+    public long InsertedOnTicks { get; set; }
 }

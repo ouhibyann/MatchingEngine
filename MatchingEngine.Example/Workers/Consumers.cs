@@ -24,7 +24,7 @@ public sealed class Consumers
             while (reader.TryRead(out var msg))
             {
                 await _log.WriteLineAsync(
-                    $"Buyer_{_consumerId} | {msg.Price} | {msg.Quantity} | {msg.Id} | {msg.CreatedOn}");
+                    $"Buyer_{_consumerId} | {msg.Price} | {msg.Quantity} | {msg.Id} | {msg.CreatedOn} | {msg.InsertedOnTicks}");
             }
         }
     }
