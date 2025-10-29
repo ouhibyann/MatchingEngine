@@ -1,6 +1,6 @@
 using System.Threading.Channels;
 
-namespace MatchingEngine.Example;
+namespace MatchingEngine.Loggers;
 
 public sealed class AsyncLogger
 {

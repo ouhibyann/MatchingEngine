@@ -4,6 +4,7 @@ using MatchingEngine.Example;
 using MatchingEngine.Example.Workers;
 using MatchingEngine.Transport;
 using Microsoft.Extensions.Configuration;
+using AsyncLogger = MatchingEngine.Loggers.AsyncLogger;
 
 // StopWatch for "benchmarking"
 Stopwatch sw = Stopwatch.StartNew();
@@ -26,26 +27,27 @@ Hub<Instrument> hub = new Hub<Instrument>(capacity: 10000, fullMode: BoundedChan
     singleReader: false);
 
 // Create AsyncLogger
-var logger = new AsyncLogger(cts.Token);
+AsyncLogger logger = new AsyncLogger(cts.Token);
 await logger.StartAsync();
 
 // Create Consumer Tasks
 // Creating them before the Producer Tasks gives a chance to every consumer to be awakened equally
+Consumer<Instrument> consumer = new Consumer<Instrument>(hub, logger);
 Task[] consumerTasks = new Task[cfg.Consumers];
 for (int i = 0; i < cfg.Consumers; i++)
 {
     int buyerId = i;
-    var worker = new Consumers(buyerId, hub, logger);
+    var worker = new Consumers(buyerId, consumer);
     consumerTasks[i] = worker.RunAsync(cts.Token);
 }
 
 // Create Producer Tasks
-Producer<Instrument> producer = new Producer<Instrument>(hub);
+Producer<Instrument> producer = new Producer<Instrument>(hub, logger);
 Task[] producerTasks = new Task[cfg.Producers];
 for (int i = 0; i < cfg.Producers; i++)
 {
     int sellerId = i;
-    Producers producers = new Producers(sellerId, cfg.MessagesPerProducer, producer, hub, logger);
+    Producers producers = new Producers(sellerId, cfg.MessagesPerProducer, producer);
     producerTasks[i] = producers.RunAsync(cts.Token);
 }
 
