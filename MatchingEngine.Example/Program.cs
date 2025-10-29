@@ -25,13 +25,17 @@ CancellationTokenSource cts = new CancellationTokenSource();
 Hub<Instrument> hub = new Hub<Instrument>(capacity: 128, fullMode: BoundedChannelFullMode.Wait, singleWriter: false,
     singleReader: false);
 
+// Create AsyncLogger
+var logger = new AsyncLogger(cts.Token);
+await logger.StartAsync();
+
 // Create Consumer Tasks
 // Creating them before the Producer Tasks gives a chance to every consumer to be awakened equally
 Task[] consumerTasks = new Task[cfg.Consumers];
 for (int i = 0; i < cfg.Consumers; i++)
 {
     int buyerId = i;
-    var worker = new Consumers(buyerId, hub);
+    var worker = new Consumers(buyerId, hub, logger);
     consumerTasks[i] = worker.RunAsync(cts.Token);
 }
 
@@ -41,7 +45,7 @@ Task[] producerTasks = new Task[cfg.Producers];
 for (int i = 0; i < cfg.Producers; i++)
 {
     int sellerId = i;
-    Producers producers = new Producers(sellerId, cfg.MessagesPerProducer, producer, hub);
+    Producers producers = new Producers(sellerId, cfg.MessagesPerProducer, producer, hub, logger);
     producerTasks[i] = producers.RunAsync(cts.Token);
 }
 
@@ -49,7 +53,7 @@ for (int i = 0; i < cfg.Producers; i++)
 await Task.WhenAll(producerTasks);
 hub.Writer.Complete();
 await Task.WhenAll(consumerTasks);
+
+await logger.StopAsync();
 sw.Stop();
-
-
 Console.WriteLine($"Example finished. Elapsed: {sw.Elapsed}");

@@ -7,11 +7,13 @@ public sealed class Consumers
 {
     private readonly int _consumerId;
     private readonly Hub<Instrument> _hub;
+    private readonly AsyncLogger _log;
 
-    public Consumers(int consumerId, Hub<Instrument> hub)
+    public Consumers(int consumerId, Hub<Instrument> hub, AsyncLogger log)
     {
         _consumerId = consumerId;
         _hub = hub;
+        _log = log;
     }
 
     public async Task RunAsync(CancellationToken ct)
@@ -21,7 +23,7 @@ public sealed class Consumers
         {
             while (reader.TryRead(out var msg))
             {
-                Console.WriteLine(
+                await _log.WriteLineAsync(
                     $"Buyer_{_consumerId} | {msg.Price} | {msg.Quantity} | {msg.Id}",
                     ct);
             }
