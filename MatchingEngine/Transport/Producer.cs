@@ -7,7 +7,7 @@ namespace MatchingEngine.Transport;
 public sealed class Producer<T> where T : class, IInstrument
 {
     private readonly ChannelWriter<T> _writer;
-    private static long _Seq = 0;
+    private static long _Seq;
     private readonly IAsyncLogger _log;
 
 

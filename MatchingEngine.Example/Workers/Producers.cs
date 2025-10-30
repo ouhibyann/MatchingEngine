@@ -22,7 +22,8 @@ public sealed class Producers
         {
             decimal price = Math.Round(100m + (decimal)(rnd.NextDouble() * 10 - 5), 2);
             int qty = rnd.Next(1, 10);
-            Instrument order = Instrument.New(price, qty);
+            var side = ((i & 1) == 0) ? Side.Buy : Side.Sell; // simple alternation
+            Instrument order = Instrument.New(price, qty, side);
             
             await _producer.PublishAsync(order, ct).ConfigureAwait(false);
         }

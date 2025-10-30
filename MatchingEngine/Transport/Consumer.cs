@@ -1,26 +1,30 @@
 using System.Threading.Channels;
 using MatchingEngine.Loggers;
+using MatchingEngine.OrderBook;
 
-namespace MatchingEngine.Transport;
-public sealed class Consumer<T> where T : class, IInstrument
+namespace MatchingEngine.Transport
 {
-    private readonly ChannelReader<T> _reader;
-    private readonly IAsyncLogger _log;
-
-    public Consumer(IMessageBus<T> bus, IAsyncLogger log)
+    public sealed class Consumer<T> where T : class, IInstrument
     {
-        _reader = bus.Reader;
-        _log = log;
-    }
+        private readonly ChannelReader<T> _reader;
+        private readonly OrderBook<T> _book = new OrderBook<T>();
+        private readonly IAsyncLogger _log;
 
-    public async Task RunAsync(CancellationToken ct)
-    {
-        // https://learn.microsoft.com/en-us/dotnet/core/extensions/channels
-        while (await _reader.WaitToReadAsync(ct).ConfigureAwait(false))
+        public Consumer(IMessageBus<T> bus, IAsyncLogger log)
         {
-            while (_reader.TryRead(out var msg))
+            _reader = bus.Reader;
+            _log = log;
+        }
+
+        public async Task RunAsync(CancellationToken ct)
+        {
+            while (await _reader.WaitToReadAsync(ct).ConfigureAwait(false))
             {
-                await _log.WriteLineAsync($"{msg.Price} | {msg.Quantity} | {msg.Id} | {msg.CreatedOn} | {msg.InsertedOnTicks}");
+                while (_reader.TryRead(out var msg))
+                {
+                    _book.ProcessFok(msg);
+                    await _log.WriteLineAsync($"{msg.Price} | {msg.Quantity} | {msg.Id} | {msg.CreatedOn} | {msg.InsertedOnTicks}");
+                }
             }
         }
     }
