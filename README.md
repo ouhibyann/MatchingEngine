@@ -29,6 +29,18 @@ The solution has been scoped with the following assumptions / choices in mind:
 
 Bounded `Channel<T>` in `Hub.cs` with configurable FullMode and capacity enables backpressure policy.<br>
 `Interlocked.Increment` on `InsertedOnTicks` ensures order within the same timestamp bucket.
+## MatchingEngine-Tests
+
+## Build & Run
+```shell
+# Run all tests in Debug config - by default
+dotnet build
+dotnet test
+```
+The test project is assessing the primary logic of the use-case:
+- Price priority
+- Buy / Sell orders
+- ...
 
 ## MatchingEngine—Example
 
