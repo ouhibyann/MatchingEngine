@@ -1,4 +1,3 @@
-using System.Threading.Channels;
 using MatchingEngine.Transport;
 
 namespace MatchingEngine.Example.Workers;
@@ -6,26 +5,16 @@ namespace MatchingEngine.Example.Workers;
 public sealed class Consumers
 {
     private readonly int _consumerId;
-    private readonly Hub<Instrument> _hub;
-    private readonly AsyncLogger _log;
+    private readonly Consumer<Instrument> _consumer;
 
-    public Consumers(int consumerId, Hub<Instrument> hub, AsyncLogger log)
+    public Consumers(int consumerId, Consumer<Instrument> consumer)
     {
         _consumerId = consumerId;
-        _hub = hub;
-        _log = log;
+        _consumer = consumer;
     }
 
     public async Task RunAsync(CancellationToken ct)
     {
-        ChannelReader<Instrument> reader = _hub.Reader;
-        while (await reader.WaitToReadAsync(ct).ConfigureAwait(false))
-        {
-            while (reader.TryRead(out var msg))
-            {
-                await _log.WriteLineAsync(
-                    $"Buyer_{_consumerId} | {msg.Price} | {msg.Quantity} | {msg.Id} | {msg.CreatedOn} | {msg.InsertedOnTicks}");
-            }
-        }
+        await _consumer.RunAsync(ct);
     }
 }

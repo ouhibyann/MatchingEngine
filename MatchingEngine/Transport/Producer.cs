@@ -1,4 +1,5 @@
 using System.Threading.Channels;
+using MatchingEngine.Loggers;
 
 namespace MatchingEngine.Transport;
 
@@ -7,10 +8,13 @@ public sealed class Producer<T> where T : class, IInstrument
 {
     private readonly ChannelWriter<T> _writer;
     private static long _Seq = 0;
+    private readonly IAsyncLogger _log;
 
-    public Producer(IMessageBus<T> bus)
+
+    public Producer(IMessageBus<T> bus, IAsyncLogger log)
     {
         _writer = bus.Writer;
+        _log = log;
     }
 
     public ValueTask PublishAsync(T message, CancellationToken ct = default)
@@ -21,7 +25,9 @@ public sealed class Producer<T> where T : class, IInstrument
         {
             message.InsertedOnTicks = Interlocked.Increment(ref _Seq);
         }
+
+        _log.WriteLineAsync($"{message.Price} | {message.Quantity} | {message.Id} | {
+            message.CreatedOn} | {message.InsertedOnTicks}", ct).ConfigureAwait(false);
         return _writer.WriteAsync(message, ct);
     }
-    
 }
