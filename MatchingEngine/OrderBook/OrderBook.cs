@@ -1,90 +1,163 @@
-using static MatchingEngine.Helpers.ConsumerHelper;
+using MatchingEngine.Helpers;
 
 namespace MatchingEngine.OrderBook
 {
     internal sealed class OrderBook<T> where T : IInstrument
     {
-        // price -> FIFO list of order | remaining
-        private readonly SortedDictionary<decimal, LinkedList<(T order, int remaining)>> _bids
+        private readonly SortedDictionary<decimal, PriceLevelHelpers<T>> _bids
             = new(Comparer<decimal>.Create((a, b) => b.CompareTo(a)));
-        private readonly SortedDictionary<decimal, LinkedList<(T order, int remaining)>> _asks
+
+        private readonly SortedDictionary<decimal, PriceLevelHelpers<T>> _asks
             = new();
 
         public (decimal? bestBid, decimal? bestAsk) TopOfBook()
         {
-            return (FirstKeyOrNull<T>(_bids), FirstKeyOrNull<T>(_asks));
+            return (BookHelpers.FirstKeyOrNull(_bids), BookHelpers.FirstKeyOrNull(_asks));
         }
 
-        // FOK = Fill-Or-Kill behavior for the incoming order
+        // If the quantity is not matching the buyer is not buying at all - no partial buy
         public void ProcessFok(T incoming)
         {
             if (incoming.Side == Side.Buy)
             {
-                int avail = SumAvailable<T>(_asks, p => p <= incoming.Price);
-                if (avail < incoming.Quantity)
+                if (!HasEnoughAtOrBelow(incoming.Price, incoming.Quantity))
                 {
-                    // rest on bids
-                    Enqueue<T>(_bids, incoming.Price, incoming, incoming.Quantity); 
+                    Enqueue(_bids, incoming);
                     return;
                 }
 
                 int need = incoming.Quantity;
-                while (need > 0)
-                    need -= ConsumeFrom(_asks, p => p <= incoming.Price, need);
+                while (need > 0) need -= ConsumeFromAsksAtOrBelow(incoming.Price, need);
             }
-            else 
+            else
             {
-                int avail = SumAvailable<T>(_bids, p => p >= incoming.Price);
-                if (avail < incoming.Quantity)
+                if (!HasEnoughAtOrAbove(incoming.Price, incoming.Quantity))
                 {
-                    // rest on asks
-                    Enqueue<T>(_asks, incoming.Price, incoming, incoming.Quantity); 
+                    Enqueue(_asks, incoming);
                     return;
                 }
 
                 int need = incoming.Quantity;
-                while (need > 0)
-                    need -= ConsumeFrom(_bids, p => p >= incoming.Price, need);
+                while (need > 0) need -= ConsumeFromBidsAtOrAbove(incoming.Price, need);
             }
         }
 
-        // Executes against head-of-queue at best acceptable prices.
-        private static int ConsumeFrom(
-            SortedDictionary<decimal, LinkedList<(T order, int remaining)>> book,
-            Func<decimal, bool> priceOk,
-            int need)
+
+        private bool HasEnoughAtOrBelow(decimal priceLimit, int needed)
         {
-            if (need <= 0 || book.Count == 0) return 0;
-
-            int filled = 0;
-            while (need > 0 && TryBestPrice<T>(book, out var best) && priceOk(best))
+            foreach (var kv in _asks)
             {
-                var q = book[best];
-                while (need > 0 && q.First is not null)
+                if (kv.Key > priceLimit) break;
+                var lvl = kv.Value;
+                // iterate ring buffer entries without allocations
+                // we can approximate by walking the ring via Dequeue/Enqueue pattern-free:
+                int i = 0, count = lvl.Count;
+                if (count == 0) continue;
+                // copy-less read: consume head repeatedly by ref, but without moving it
+                // here we use a bounded loop to subtract quickly:
+                int scanned = 0;
+                int idx = 0;
+                while (scanned < count)
                 {
-                    var node = q.First!;
-                    var (ord, rem) = node.Value;
+                    ref var e = ref lvl.PeekHeadRef();
+                    needed -= e.Remaining;
+                    if (needed <= 0) return true;
+                    var rem = e.Remaining;
+                    e.Remaining = -1;
+                    lvl.DequeueHeadIfEmpty();
 
-                    int take = Math.Min(rem, need);
-                    rem -= take;
+                    lvl.Enqueue(e.Order, rem);
+                    scanned++;
+                }
+            }
+
+            return false;
+        }
+
+        private bool HasEnoughAtOrAbove(decimal priceLimit, int needed)
+        {
+            foreach (var kv in _bids)
+            {
+                if (kv.Key < priceLimit) break;
+                var lvl = kv.Value;
+                int count = lvl.Count;
+                if (count == 0) continue;
+                int scanned = 0;
+                while (scanned < count)
+                {
+                    ref var e = ref lvl.PeekHeadRef();
+                    needed -= e.Remaining;
+                    if (needed <= 0) return true;
+                    var rem = e.Remaining;
+                    e.Remaining = -1;
+                    lvl.DequeueHeadIfEmpty();
+                    lvl.Enqueue(e.Order, rem);
+                    scanned++;
+                }
+            }
+
+            return false;
+        }
+
+        private int ConsumeFromAsksAtOrBelow(decimal priceLimit, int need)
+        {
+            int filled = 0;
+            while (need > 0 && BookHelpers.TryBestKey(_asks, out var best) && best <= priceLimit)
+            {
+                var lvl = _asks[best];
+                while (need > 0 && !lvl.IsEmpty)
+                {
+                    ref var head = ref lvl.PeekHeadRef();
+                    int take = Math.Min(head.Remaining, need);
+                    head.Remaining -= take;
                     need -= take;
                     filled += take;
-
-                    if (rem == 0)
-                    {
-                        q.RemoveFirst();
-                    }
-                    else
-                    {
-                        node.Value = (ord, rem);
-                        break;
-                    }
+                    if (head.Remaining == 0) lvl.DequeueHeadIfEmpty();
+                    else break;
                 }
 
-                if (q.Count == 0)
-                    book.Remove(best);
+                if (lvl.IsEmpty)
+                {
+                    lvl.ReturnBufferIfEmpty();
+                    _asks.Remove(best);
+                }
             }
+
             return filled;
+        }
+
+        private int ConsumeFromBidsAtOrAbove(decimal priceLimit, int need)
+        {
+            int filled = 0;
+            while (need > 0 && BookHelpers.TryBestKey(_bids, out var best) && best >= priceLimit)
+            {
+                var lvl = _bids[best];
+                while (need > 0 && !lvl.IsEmpty)
+                {
+                    ref var head = ref lvl.PeekHeadRef();
+                    int take = Math.Min(head.Remaining, need);
+                    head.Remaining -= take;
+                    need -= take;
+                    filled += take;
+                    if (head.Remaining == 0) lvl.DequeueHeadIfEmpty();
+                    else break;
+                }
+
+                if (lvl.IsEmpty)
+                {
+                    lvl.ReturnBufferIfEmpty();
+                    _bids.Remove(best);
+                }
+            }
+
+            return filled;
+        }
+
+        private static void Enqueue(SortedDictionary<decimal, PriceLevelHelpers<T>> book, T order)
+        {
+            if (!book.TryGetValue(order.Price, out var lvl))
+                book[order.Price] = lvl = new PriceLevelHelpers<T>(8);
+            lvl.Enqueue(order, order.Quantity);
         }
     }
 }
