@@ -38,7 +38,7 @@ Task[] consumerTasks = new Task[cfg.Consumers];
 for (int i = 0; i < cfg.Consumers; i++)
 {
     IAsyncLogger producerLog = logger.For($"Consumer-{i}");
-    Consumer<Instrument> consumer = new Consumer<Instrument>(hub, producerLog);
+    Consumer<Instrument> consumer = new Consumer<Instrument>(hub, producerLog, cfg.LoggingEnabled);
     Consumers worker = new Consumers(i, consumer);
     consumerTasks[i] = worker.RunAsync(cts.Token);
 }
@@ -48,7 +48,7 @@ Task[] producerTasks = new Task[cfg.Producers];
 for (int i = 0; i < cfg.Producers; i++)
 {
     IAsyncLogger producerLog = logger.For($"Producer-{i}");
-    Producer<Instrument> producer = new Producer<Instrument>(hub, producerLog);
+    Producer<Instrument> producer = new Producer<Instrument>(hub, producerLog, cfg.LoggingEnabled);
     Producers producers = new Producers(i, cfg.MessagesPerProducer, producer);
     producerTasks[i] = producers.RunAsync(cts.Token);
 }

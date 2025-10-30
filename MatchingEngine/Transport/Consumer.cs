@@ -9,11 +9,13 @@ namespace MatchingEngine.Transport
         private readonly ChannelReader<T> _reader;
         private readonly OrderBook<T> _book = new OrderBook<T>();
         private readonly IAsyncLogger _log;
+        private readonly bool _logEnabled;
 
-        public Consumer(IMessageBus<T> bus, IAsyncLogger log)
+        public Consumer(IMessageBus<T> bus, IAsyncLogger log, bool logEnabled)
         {
             _reader = bus.Reader;
             _log = log;
+            _logEnabled = logEnabled;
         }
 
         public async Task RunAsync(CancellationToken ct)
@@ -22,8 +24,10 @@ namespace MatchingEngine.Transport
             {
                 while (_reader.TryRead(out var msg))
                 {
+                    if (_logEnabled)
+                        _ = _log.WriteLineAsync(
+                            $"{msg.Price} | {msg.Quantity} | {msg.Id} | {msg.CreatedOn} | {msg.InsertedOnTicks}", ct);
                     _book.ProcessFok(msg);
-                    await _log.WriteLineAsync($"{msg.Price} | {msg.Quantity} | {msg.Id} | {msg.CreatedOn} | {msg.InsertedOnTicks}");
                 }
             }
         }
