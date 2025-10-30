@@ -51,12 +51,11 @@ namespace MatchingEngine.OrderBook
                 var lvl = kv.Value;
                 // iterate ring buffer entries without allocations
                 // we can approximate by walking the ring via Dequeue/Enqueue pattern-free:
-                int i = 0, count = lvl.Count;
+                int count = lvl.Count;
                 if (count == 0) continue;
                 // copy-less read: consume head repeatedly by ref, but without moving it
                 // here we use a bounded loop to subtract quickly:
                 int scanned = 0;
-                int idx = 0;
                 while (scanned < count)
                 {
                     ref var e = ref lvl.PeekHeadRef();
