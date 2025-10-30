@@ -7,14 +7,15 @@ namespace MatchingEngine.Transport;
 public sealed class Producer<T> where T : class, IInstrument
 {
     private readonly ChannelWriter<T> _writer;
-    private static long _Seq = 0;
+    private static long _Seq;
     private readonly IAsyncLogger _log;
+    private readonly bool _logEnabled;
 
-
-    public Producer(IMessageBus<T> bus, IAsyncLogger log)
+    public Producer(IMessageBus<T> bus, IAsyncLogger log, bool logEnabled = true)
     {
         _writer = bus.Writer;
         _log = log;
+        _logEnabled = logEnabled;
     }
 
     public ValueTask PublishAsync(T message, CancellationToken ct = default)
@@ -26,8 +27,10 @@ public sealed class Producer<T> where T : class, IInstrument
             message.InsertedOnTicks = Interlocked.Increment(ref _Seq);
         }
 
-        _log.WriteLineAsync($"{message.Price} | {message.Quantity} | {message.Id} | {
-            message.CreatedOn} | {message.InsertedOnTicks}", ct).ConfigureAwait(false);
+        if (_logEnabled)
+            _ = _log.WriteLineAsync(
+                $"{message.Price} | {message.Quantity} | {message.Id} | {message.CreatedOn} | {message.InsertedOnTicks}",
+                ct);
         return _writer.WriteAsync(message, ct);
     }
 }

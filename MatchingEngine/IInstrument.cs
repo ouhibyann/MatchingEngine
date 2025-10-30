@@ -1,5 +1,6 @@
 namespace MatchingEngine;
 
+public enum Side { Buy, Sell }
 public interface IInstrument
 {
     public Guid Id { get; }
@@ -7,4 +8,5 @@ public interface IInstrument
     public int Quantity { get; }
     public DateTime CreatedOn { get; }
     public long InsertedOnTicks { get; set; }
+    public Side Side { get; }
 }
