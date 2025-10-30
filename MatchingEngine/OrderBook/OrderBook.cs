@@ -2,7 +2,7 @@ using MatchingEngine.Helpers;
 
 namespace MatchingEngine.OrderBook
 {
-    internal sealed class OrderBook<T> where T : IInstrument
+    public sealed class OrderBook<T> where T : IInstrument
     {
         private readonly SortedDictionary<decimal, PriceLevelHelpers<T>> _bids
             = new(Comparer<decimal>.Create((a, b) => b.CompareTo(a)));
