@@ -1,8 +1,7 @@
-# ENGIE - Simplified Matching Engine
+# Simplified Yet Efficient Matching Engine (SYEME)
 
-### Please implement a simplified matching engine as a C# console application.
 
-**Your implementation should:**<br>
+**This implementation allows to:**<br>
 Match buy and sell orders based on price-time priority —
 orders with better prices are matched first, and when prices are equal, earlier orders take priority. <br>
 Support concurrent access (multiple threads inserting and matching orders).<br>
@@ -11,7 +10,7 @@ Use appropriate data structures for fast lookups and efficient matching.<br>
 Properly handle race conditions and synchronization while minimizing locking or contention.<br>
 
 **Attention points:**<br>
-Apply high-performance techniques (e.g., object pooling, lock-free structures).
+High-performance techniques have been applied to give the best performance possible.
 <br>
 <br>
 
@@ -55,3 +54,7 @@ dotnet run --project MatchingEngine.Example -c Release
 Edit `appsettings.json` to adjust Producers, Consumers, and MessagesPerProducer.<br>
 You can also toggle the logging in `appsettings.json` - disable to see real performances as logging put a lot of
 pressure on the GC
+<br><br><br>
+
+
+SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
