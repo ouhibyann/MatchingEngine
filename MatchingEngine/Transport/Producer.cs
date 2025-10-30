@@ -7,7 +7,7 @@ namespace MatchingEngine.Transport;
 public sealed class Producer<T> where T : class, IInstrument
 {
     private readonly ChannelWriter<T> _writer;
-    private static long _Seq;
+    private static long _seq;
     private readonly IAsyncLogger _log;
     private readonly bool _logEnabled;
 
@@ -24,7 +24,7 @@ public sealed class Producer<T> where T : class, IInstrument
         // Assign a strict, monotonic order at the ingress point
         if (message.InsertedOnTicks == 0)
         {
-            message.InsertedOnTicks = Interlocked.Increment(ref _Seq);
+            message.InsertedOnTicks = Interlocked.Increment(ref _seq);
         }
 
         if (_logEnabled)

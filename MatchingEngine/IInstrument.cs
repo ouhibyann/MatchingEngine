@@ -1,6 +1,11 @@
 namespace MatchingEngine;
 
-public enum Side { Buy, Sell }
+public enum Side
+{
+    Buy,
+    Sell
+}
+
 public interface IInstrument
 {
     public Guid Id { get; }

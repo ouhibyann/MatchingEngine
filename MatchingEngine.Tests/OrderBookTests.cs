@@ -20,7 +20,7 @@ public class OrderBookTests
         _book.ProcessFok(TestOrder.Buy(100m, 10));
 
         var (bb, ba) = _book.TopOfBook();
-        
+
         Assert.That(bb, Is.EqualTo(100m));
         Assert.That(ba, Is.Null);
     }
@@ -31,7 +31,7 @@ public class OrderBookTests
         _book.ProcessFok(TestOrder.Sell(101m, 5));
 
         var (bb, ba) = _book.TopOfBook();
-        
+
         Assert.That(bb, Is.Null);
         Assert.That(ba, Is.EqualTo(101m));
     }
@@ -39,7 +39,6 @@ public class OrderBookTests
     [Test]
     public void FullFill_BuyConsumesSingleAskLevel_Completely()
     {
-        
         _book.ProcessFok(TestOrder.Sell(99m, 150));
         _book.ProcessFok(TestOrder.Buy(100m, 150));
 
@@ -55,14 +54,13 @@ public class OrderBookTests
         _book.ProcessFok(TestOrder.Buy(100m, 60));
 
         var (bb, ba) = _book.TopOfBook();
-        Assert.That(bb, Is.EqualTo(100m)); 
-        Assert.That(ba, Is.EqualTo(100m)); 
+        Assert.That(bb, Is.EqualTo(100m));
+        Assert.That(ba, Is.EqualTo(100m));
     }
 
     [Test]
     public void PricePriority_BuyConsumesBestPricedAsksFirst()
     {
-        
         _book.ProcessFok(TestOrder.Sell(98m, 10));
         _book.ProcessFok(TestOrder.Sell(100m, 10));
 

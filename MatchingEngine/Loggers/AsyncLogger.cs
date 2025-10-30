@@ -9,7 +9,10 @@ public sealed class AsyncLogger : IAsyncLogger
     private Task? _task;
     public bool Enabled { get; set; } = true;
 
-    public AsyncLogger(CancellationToken outer) { _outer = outer; }
+    public AsyncLogger(CancellationToken outer)
+    {
+        _outer = outer;
+    }
 
     public ValueTask WriteLineAsync(string line, CancellationToken ct = default)
     {
@@ -26,11 +29,13 @@ public sealed class AsyncLogger : IAsyncLogger
     {
         private readonly AsyncLogger _root;
         private readonly string _prefix;
+
         public Scoped(AsyncLogger root, string category)
         {
             _root = root;
             _prefix = $"[{category}] ";
         }
+
         public ValueTask WriteLineAsync(string line, CancellationToken ct = default)
         {
             return _root.WriteLineAsync(_prefix + line, ct);

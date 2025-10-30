@@ -4,7 +4,6 @@ namespace MatchingEngine.Tests
 {
     public sealed class TestOrder : IInstrument
     {
-        
         public Guid Id { get; }
         public Side Side { get; init; }
         public decimal Price { get; init; }
@@ -12,7 +11,7 @@ namespace MatchingEngine.Tests
         public DateTime CreatedOn { get; }
         public long InsertedOnTicks { get; set; }
 
-        public static TestOrder Buy(decimal px, int qty)  => new() { Side = Side.Buy,  Price = px, Quantity = qty };
+        public static TestOrder Buy(decimal px, int qty) => new() { Side = Side.Buy, Price = px, Quantity = qty };
         public static TestOrder Sell(decimal px, int qty) => new() { Side = Side.Sell, Price = px, Quantity = qty };
     }
 }
